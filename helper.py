@@ -1,4 +1,7 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+import pandas as pd
 def medal_tally(df):
     # Remove duplicate medals
     medal_tally = df.drop_duplicates(subset=[
@@ -123,3 +126,47 @@ def men_vs_female_total(df):
     # Create labels and values
     values = [gender_counts['M'], gender_counts['F']]
     return values
+
+
+def country_year_list_prediction(df):
+    country = np.unique(df['region'].dropna().values).tolist()
+    country.sort()
+    country.insert(0, 'none')
+    return  country
+
+
+def prediction(df, selected_country, selected_year):
+    # Filter for selected country and Summer medals
+    df_country = df[
+        (df["region"] == selected_country) &
+        (df["Season"] == "Summer") &
+        (df["Medal"].notna())
+    ]
+
+    # Drop duplicates to avoid counting team medals multiple times
+    df_unique = df_country.drop_duplicates(subset=["Year", "Event", "Medal"])
+
+    # Group by year to get total medal count
+    medal_counts = (
+        df_unique.groupby("Year").size()
+        .reset_index(name="Medal_Count")
+        .sort_values("Year")
+    )
+
+    # Edge case: no data found
+    if medal_counts.empty:
+        print(f"⚠️ No medal data found for '{selected_country}'. Cannot make prediction.")
+        return None
+
+    x = medal_counts[["Year"]].values
+    y = medal_counts["Medal_Count"].values
+
+    # Train model and predict
+    model: LinearRegression = LinearRegression()
+    model.fit(x, y)
+    predicted_count = model.predict([[selected_year]])[0]
+
+    return predicted_count  # Return rounded integer
+
+
+
