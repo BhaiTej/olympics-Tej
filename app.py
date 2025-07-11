@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.figure_factory as ff
 
-from helper import men_vs_female
+from helper import men_vs_female, prediction
 
 df = pd.read_csv('olympics_dataset.csv')
 region_df = pd.read_csv('noc_regions.csv')
@@ -16,7 +16,7 @@ st.sidebar.title("Olympics Analysis ")
 st.sidebar.image('https://e7.pngegg.com/pngimages/1020/402/png-clipart-2024-summer-olympics-brand-circle-area-olympic-rings-olympics-logo-text-sport.png')
 user_menu=st.sidebar.radio(
     'Select an Option',
-    ('Medal Tally','Overall Analysis','Country-wise Analysis','Athlete-wise Analysis')
+    ('Medal Tally','Overall Analysis','Country-wise Analysis','Athlete-wise Analysis','Predictions')
 )
 # st.dataframe(df)
 if user_menu == 'Medal Tally':
@@ -161,3 +161,26 @@ if user_menu=='Athlete-wise Analysis':
 
     # Show in Streamlit
     st.pyplot(fig)
+
+if user_menu=='Predictions':
+    st.title('Predict how many Medals A country will win')
+    year=['none',2028,2032,2036]
+    country = helper.country_year_list_prediction(df)
+    selected_year = st.selectbox("Select Year", year)
+    selected_country = st.selectbox("Select Country", country)
+    if st.button('Submit'):
+        if selected_year == 'none' and selected_country == 'none':
+            st.warning("⚠️ Please fill in both fields: Year and Country.")
+        elif selected_year == 'none':
+            st.warning("⚠️ Please fill the field: Year")
+        elif selected_country == 'none':
+            st.warning("⚠️ Please fill the field: Country")
+        else:
+            x = prediction(df, selected_country, selected_year)
+
+            if x is None:
+                st.error(f"😕 No data available for {selected_country} to make a prediction.")
+            else:
+                st.info(
+                    f"🎯 {selected_country} is predicted to win {int(round(x))} medals in the {selected_year} Olympics.")
+
