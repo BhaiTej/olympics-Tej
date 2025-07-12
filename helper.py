@@ -135,38 +135,49 @@ def country_year_list_prediction(df):
     return  country
 
 
-def prediction(df, selected_country, selected_year):
-    # Filter for selected country and Summer medals
+
+def prediction(df: pd.DataFrame, selected_country: str, selected_year: int):
+    # Filter data for the selected country, Summer season, and valid medals
     df_country = df[
         (df["region"] == selected_country) &
         (df["Season"] == "Summer") &
         (df["Medal"].notna())
     ]
 
-    # Drop duplicates to avoid counting team medals multiple times
-    df_unique = df_country.drop_duplicates(subset=["Year", "Event", "Medal"])
-
-    # Group by year to get total medal count
-    medal_counts = (
-        df_unique.groupby("Year").size()
-        .reset_index(name="Medal_Count")
-        .sort_values("Year")
-    )
-
-    # Edge case: no data found
-    if medal_counts.empty:
-        print(f"⚠️ No medal data found for '{selected_country}'. Cannot make prediction.")
+    if df_country.empty:
         return None
 
-    x = medal_counts[["Year"]].values
-    y = medal_counts["Medal_Count"].values
+    results = {}
 
-    # Train model and predict
-    model: LinearRegression = LinearRegression()
-    model.fit(x, y)
-    predicted_count = model.predict([[selected_year]])[0]
+    # Loop through each medal type
+    for medal_type in ["Gold", "Silver", "Bronze"]:
+        df_medal = df_country[df_country["Medal"] == medal_type]
 
-    return predicted_count  # Return rounded integer
+        # Drop duplicates to avoid team duplicates
+        df_unique = df_medal.drop_duplicates(subset=["Year", "Event", "Medal"])
+
+        medal_counts = (
+            df_unique.groupby("Year").size()
+            .reset_index(name="Medal_Count")
+            .sort_values("Year")
+        )
+
+        if medal_counts.empty:
+            results[medal_type] = 0
+            continue
+
+        x = medal_counts[["Year"]].values
+        y = medal_counts["Medal_Count"].values
+
+        model = LinearRegression()
+        model.fit(x, y)
+        predicted = model.predict([[selected_year]])[0]
+        results[medal_type] = max(0, int(round(predicted)))  # ensure non-negative int
+
+    # Total medals
+    results["Total"] = sum(results.values())
+
+    return results
 
 
 

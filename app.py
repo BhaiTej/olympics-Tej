@@ -179,8 +179,13 @@ if user_menu=='Predictions':
             x = prediction(df, selected_country, selected_year)
 
             if x is None:
-                st.error(f"😕 No data available for {selected_country} to make a prediction.")
+                st.error(f"🎯 {selected_country} has no medals in the {selected_year} Olympics.")
             else:
-                st.info(
-                    f"🎯 {selected_country} is predicted to win {int(round(x))} medals in the {selected_year} Olympics.")
-
+                st.success(
+                    f"🎯 {selected_country} is predicted to win a total of {x['Total']} medals in the {selected_year} Olympics."
+                )
+                st.markdown(f"""
+                - 🥇 **Gold**: {x['Gold']}
+                - 🥈 **Silver**: {x['Silver']}
+                - 🥉 **Bronze**: {x['Bronze']}
+                """)
