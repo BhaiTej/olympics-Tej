@@ -136,7 +136,7 @@ def country_year_list_prediction(df):
 
 
 
-def prediction(df: pd.DataFrame, selected_country: str, selected_year: int):
+def prediction(df, selected_country, selected_year):
     # Filter data for the selected country, Summer season, and valid medals
     df_country = df[
         (df["region"] == selected_country) &
